@@ -1,4 +1,4 @@
-//Simple GO RESTful API to teach myself APIs
+//Simple GO RESTful Address book API to teach myself APIs
 //Written by Jasper Grant
 //2023-08-14
 
@@ -16,13 +16,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//Character data type is generic
-//TODO: Replace with something cooler
-type Character struct{
-	gorm.Model
+//Data type to store contact in address book
+type Contact struct{
+	ID string `json:"ID"`
 	Name string `json:"Name"`
-	Age int16 	`json:"Age"`
 	Organisation string `json:"Organisation"`
+	Address string `json: "Address"`
 }
 
 
@@ -32,41 +31,41 @@ func homePage(response http.ResponseWriter, request *http.Request){
 	fmt.Println("Endpoint Hit: Homepage")
 }
 
-//Function to list all characters
-func charactersList(response http.ResponseWriter, request *http.Request){
-	fmt.Println("Endpoint Hit: List all characters")
+//Function to list all contacts
+func contactsList(response http.ResponseWriter, request *http.Request){
+	fmt.Println("Endpoint Hit: List all contacts")
 	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil {
 		panic("Failed to connect to database")
 	}
 	defer db.Close()
-	var Characters []Character
-	db.Find(&Characters)
-	fmt.Println("{}", Characters)
-	json.NewEncoder(response).Encode(Characters)
+	var Contacts []Contact
+	db.Find(&Contacts)
+	fmt.Println("{}", Contacts)
+	json.NewEncoder(response).Encode(Contacts)
 }
 
-//Function to list a single character by Name
+//Function to list a single contact by Name
 //R in CRUD
-func readCharacterByName(response http.ResponseWriter, request *http.Request){
-	fmt.Println("Endpoint Hit: Return character by name")
+func readContactByID(response http.ResponseWriter, request *http.Request){
+	fmt.Println("Endpoint Hit: Return contact by ID")
 	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil{
 		panic("Failed to connect to database")
 	}
 	defer db.Close()
-	fmt.Println("Endpoint Hit: Delete Character")
-	name := mux.Vars(request)["Name"]
-	var character Character
-	db.Where("Name = ?", name).Find(&character)
-	fmt.Println("{}", &character)
-	json.NewEncoder(response).Encode(&character)
+	fmt.Println("Endpoint Hit: Delete Contact")
+	id := mux.Vars(request)["ID"]
+	var contact Contact
+	db.Where("ID = ?", id).Find(&contact)
+	fmt.Println("{}", &contact)
+	json.NewEncoder(response).Encode(&contact)
 }
 
-//Function to create a new character
+//Function to create a new contact
 //C in CRUD
-func createNewCharacter(response http.ResponseWriter, request *http.Request){
-	fmt.Println("Endpoint Hit: Create new character by name")
+func createNewContact(response http.ResponseWriter, request *http.Request){
+	fmt.Println("Endpoint Hit: Create new contact by ID")
 	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil{
 		panic("Failed to connect to database")
@@ -74,50 +73,50 @@ func createNewCharacter(response http.ResponseWriter, request *http.Request){
 	defer db.Close()
 	//Get request body
 	reqBody,_ := ioutil.ReadAll(request.Body)
-	//Create variable for character and unmarshal from json
-	var character Character
-	json.Unmarshal(reqBody, &character)
-	//Add to character database
-	db.Create(&character)
-	json.NewEncoder(response).Encode(character)
+	//Create variable for contact and unmarshal from json
+	var contact Contact
+	json.Unmarshal(reqBody, &contact)
+	//Add to contact database
+	db.Create(&contact)
+	json.NewEncoder(response).Encode(contact)
 }
 
-//Function to update a character
+//Function to update a contact
 //U in CRUD
-func updateCharacterByName(response http.ResponseWriter, request *http.Request){
-	fmt.Println("Endpoint Hit: Update character by name")
+func updateContactByID(response http.ResponseWriter, request *http.Request){
+	fmt.Println("Endpoint Hit: Update contact by ID")
 	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil{
 		panic("Failed to connect to database")
 	}
 	defer db.Close()
-	name := mux.Vars(request)["Name"]
-	var character Character
-	db.Where("Name = ?", name).Find(&character)
-	db.Delete(&character)
+	id := mux.Vars(request)["ID"]
+	var contact Contact
+	db.Where("ID = ?", id).Find(&contact)
+	db.Delete(&contact)
 	//Get request body
 	reqBody,_ := ioutil.ReadAll(request.Body)
-	//Create variable for character and unmarshal from json
-	var updatedCharacter Character
-	json.Unmarshal(reqBody, &updatedCharacter)
-	db.Save(&updatedCharacter)
-	fmt.Fprintf(response, "Successfully updated user")
+	//Create variable for contact and unmarshal from json
+	var updatedContact Contact
+	json.Unmarshal(reqBody, &updatedContact)
+	db.Save(&updatedContact)
+	fmt.Fprintf(response, "Successfully updated contact")
 }
 
-//Function to delete a character
+//Function to delete a contact
 //D in CRUD
-func deleteCharacterByName(response http.ResponseWriter, request *http.Request){
-	fmt.Println("Endpoint Hit: Delete Character by name")
+func deleteContactByID(response http.ResponseWriter, request *http.Request){
+	fmt.Println("Endpoint Hit: Delete Contact by ID")
 	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil{
 		panic("Failed to connect to database")
 	}
 	defer db.Close()
-	fmt.Println("Endpoint Hit: Delete Character")
-	name := mux.Vars(request)["Name"]
-	var character Character
-	db.Where("Name = ?", name).Find(&character)
-	fmt.Fprintf(response, "Successfully deleted user")
+	fmt.Println("Endpoint Hit: Delete Contact")
+	id := mux.Vars(request)["ID"]
+	var contact Contact
+	db.Where("ID = ?", id).Find(&contact)
+	fmt.Fprintf(response, "Successfully deleted contact")
 }
 
 //Function that handles API requests
@@ -125,11 +124,11 @@ func poll(){
 	//Create new mux router
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homePage)
-	router.HandleFunc("/characters", charactersList)
-	router.HandleFunc("/character", createNewCharacter).Methods("POST")
-	router.HandleFunc("/character/{Name}", updateCharacterByName).Methods("PUT")
-	router.HandleFunc("/character/{Name}", deleteCharacterByName).Methods("DELETE")
-	router.HandleFunc("/character/{Name}", readCharacterByName)
+	router.HandleFunc("/contacts", contactsList)
+	router.HandleFunc("/contact", createNewContact).Methods("POST")
+	router.HandleFunc("/contact/{ID}", updateContactByID).Methods("PUT")
+	router.HandleFunc("/contact/{ID}", deleteContactByID).Methods("DELETE")
+	router.HandleFunc("/contact/{ID}", readContactByID)
 	log.Fatal(http.ListenAndServe(":10000", router))
 }
 
@@ -142,7 +141,7 @@ func initialMigration(){
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&Character{})
+	db.AutoMigrate(&Contact{})
 }
 
 //Main function

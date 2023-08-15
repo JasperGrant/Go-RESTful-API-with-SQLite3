@@ -7,13 +7,13 @@
 	},
 	"item": [
 		{
-			"name": "Create Character",
+			"name": "Create Contact",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"Id\": \"3\", \r\n    \"Name\": \"Homer Simpson\", \r\n    \"Age\": 36, \r\n    \"Organisation\": \"Springfield Nuclear Power\"\r\n}",
+					"raw": "{\r\n    \"Id\": \"2\", \r\n    \"Name\": \"Homer Simpson\", \r\n    \"Organisation\": \"Springfield Nuclear Power\",\r\n    \"Address\": \"123 Jones Road\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -21,32 +21,31 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:10000/character/",
+					"raw": "localhost:10000/contact",
 					"host": [
 						"localhost"
 					],
 					"port": "10000",
 					"path": [
-						"character",
-						""
+						"contact"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Delete Character",
+			"name": "View Single Contact",
 			"request": {
-				"method": "DELETE",
+				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:10000/character/2",
+					"raw": "localhost:10000/contact/2",
 					"host": [
 						"localhost"
 					],
 					"port": "10000",
 					"path": [
-						"character",
+						"contact",
 						"2"
 					]
 				}
@@ -54,7 +53,7 @@
 			"response": []
 		},
 		{
-			"name": "Update Character",
+			"name": "Update Contact",
 			"event": [
 				{
 					"listen": "test",
@@ -71,7 +70,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"Id\": \"2\", \r\n    \"Name\": \"Homer Simpson\", \r\n    \"Age\": 36, \r\n    \"Organisation\": \"Springfield Nuclear Power\"\r\n}",
+					"raw": "{\r\n    \"Id\": \"2\", \r\n    \"Name\": \"Homer Simpson\", \r\n    \"Organisation\": \"Springfield Nuclear Power\",\r\n    \"Address\": \"456 Jones Road\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -79,13 +78,50 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:10000/character/2",
+					"raw": "localhost:10000/contact/2",
 					"host": [
 						"localhost"
 					],
 					"port": "10000",
 					"path": [
-						"character",
+						"contact",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "View all Contacts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:10000/contacts",
+					"host": [
+						"localhost"
+					],
+					"port": "10000",
+					"path": [
+						"contacts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Contact",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:10000/contact/2",
+					"host": [
+						"localhost"
+					],
+					"port": "10000",
+					"path": [
+						"contact",
 						"2"
 					]
 				}
