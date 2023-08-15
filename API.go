@@ -72,7 +72,10 @@ func createNewContact(response http.ResponseWriter, request *http.Request){
 	}
 	defer db.Close()
 	//Get request body
-	reqBody,_ := ioutil.ReadAll(request.Body)
+	reqBody,err := ioutil.ReadAll(request.Body)
+	if err != nil{
+		panic("Failed to get body from request")
+	}
 	//Create variable for contact and unmarshal from json
 	var contact Contact
 	json.Unmarshal(reqBody, &contact)
@@ -95,7 +98,10 @@ func updateContactByID(response http.ResponseWriter, request *http.Request){
 	db.Where("ID = ?", id).Find(&contact)
 	db.Delete(&contact)
 	//Get request body
-	reqBody,_ := ioutil.ReadAll(request.Body)
+	reqBody,err := ioutil.ReadAll(request.Body)
+	if err != nil{
+		panic("Failed to get body from request")
+	}
 	//Create variable for contact and unmarshal from json
 	var updatedContact Contact
 	json.Unmarshal(reqBody, &updatedContact)
@@ -112,7 +118,6 @@ func deleteContactByID(response http.ResponseWriter, request *http.Request){
 		panic("Failed to connect to database")
 	}
 	defer db.Close()
-	fmt.Println("Endpoint Hit: Delete Contact")
 	id := mux.Vars(request)["ID"]
 	var contact Contact
 	db.Where("ID = ?", id).Find(&contact)
