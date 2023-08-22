@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/cors"
 )
 
 //Data type to store contact in address book
@@ -134,7 +135,14 @@ func poll(){
 	router.HandleFunc("/contact/{ID}", updateContactByID).Methods("PUT")
 	router.HandleFunc("/contact/{ID}", deleteContactByID).Methods("DELETE")
 	router.HandleFunc("/contact/{ID}", readContactByID)
-	log.Fatal(http.ListenAndServe(":10000", router))
+	//Specify allowed contacts
+	c := cors.New(cors.Options{
+        AllowedOrigins: []string{"http://localhost:4200"},
+        AllowCredentials: true,
+    })
+
+    handler := c.Handler(router)
+	log.Fatal(http.ListenAndServe(":10000", handler))
 }
 
 //Function to set up initial database
