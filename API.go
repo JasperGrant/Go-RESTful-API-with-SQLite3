@@ -12,121 +12,90 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/cors"
 )
 
-//Data type to store contact in address book
-type Contact struct{
-	ID string `json:"ID"`
-	Name string `json:"Name"`
+// Data type to store contact in address book
+type Contact struct {
+	ID           string `json:"ID"`
+	Name         string `json:"Name"`
 	Organisation string `json:"Organisation"`
-	Address string `json: "Address"`
 }
 
+var Contacts []Contact
 
-//Function that is triggered when / endpoint is hit
-func homePage(response http.ResponseWriter, request *http.Request){
+// Function that is triggered when / endpoint is hit
+func homePage(response http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(response, "Homepage!")
 	fmt.Println("Endpoint Hit: Homepage")
 }
 
-//Function to list all contacts
-func contactsList(response http.ResponseWriter, request *http.Request){
+// Function to list all contacts
+func contactsList(response http.ResponseWriter, request *http.Request) {
 	fmt.Println("Endpoint Hit: List all contacts")
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		panic("Failed to connect to database")
-	}
-	defer db.Close()
-	var Contacts []Contact
-	db.Find(&Contacts)
 	fmt.Println("{}", Contacts)
 	json.NewEncoder(response).Encode(Contacts)
 }
 
-//Function to list a single contact by Name
-//R in CRUD
-func readContactByID(response http.ResponseWriter, request *http.Request){
+// Function to list a single contact by Name
+// R in CRUD
+func readContactByID(response http.ResponseWriter, request *http.Request) {
 	fmt.Println("Endpoint Hit: Return contact by ID")
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil{
-		panic("Failed to connect to database")
-	}
-	defer db.Close()
-	fmt.Println("Endpoint Hit: Delete Contact")
 	id := mux.Vars(request)["ID"]
-	var contact Contact
-	db.Where("ID = ?", id).Find(&contact)
-	fmt.Println("{}", &contact)
-	json.NewEncoder(response).Encode(&contact)
+	for _, contact := range Contacts {
+		if contact.ID == id {
+			fmt.Println("{}", &contact)
+			json.NewEncoder(response).Encode(&contact)
+		}
+	}
 }
 
-//Function to create a new contact
-//C in CRUD
-func createNewContact(response http.ResponseWriter, request *http.Request){
+// Function to create a new contact
+// C in CRUD
+func createNewContact(response http.ResponseWriter, request *http.Request) {
 	fmt.Println("Endpoint Hit: Create new contact by ID")
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil{
-		panic("Failed to connect to database")
-	}
-	defer db.Close()
-	//Get request body
-	reqBody,err := ioutil.ReadAll(request.Body)
-	if err != nil{
-		panic("Failed to get body from request")
-	}
-	//Create variable for contact and unmarshal from json
 	var contact Contact
+	reqBody, _ := ioutil.ReadAll(request.Body)
 	json.Unmarshal(reqBody, &contact)
 	//Add to contact database
-	db.Create(&contact)
+	Contacts = append(Contacts, contact)
 	json.NewEncoder(response).Encode(contact)
 }
 
-//Function to update a contact
-//U in CRUD
-func updateContactByID(response http.ResponseWriter, request *http.Request){
+// Function to update a contact
+// U in CRUD
+func updateContactByID(response http.ResponseWriter, request *http.Request) {
 	fmt.Println("Endpoint Hit: Update contact by ID")
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil{
-		panic("Failed to connect to database")
-	}
-	defer db.Close()
 	id := mux.Vars(request)["ID"]
-	var contact Contact
-	db.Where("ID = ?", id).Find(&contact)
-	db.Delete(&contact)
-	//Get request body
-	reqBody,err := ioutil.ReadAll(request.Body)
-	if err != nil{
-		panic("Failed to get body from request")
-	}
-	//Create variable for contact and unmarshal from json
 	var updatedContact Contact
+	reqBody, _ := ioutil.ReadAll(request.Body)
 	json.Unmarshal(reqBody, &updatedContact)
-	db.Save(&updatedContact)
-	fmt.Fprintf(response, "Successfully updated contact")
-}
-
-//Function to delete a contact
-//D in CRUD
-func deleteContactByID(response http.ResponseWriter, request *http.Request){
-	fmt.Println("Endpoint Hit: Delete Contact by ID")
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil{
-		panic("Failed to connect to database")
+	for index, contact := range Contacts {
+		if contact.ID == id {
+			fmt.Println("{}", &contact)
+			Contacts = append(Contacts[:index], Contacts[index+1:]...)
+			Contacts = append(Contacts, updatedContact)
+		}
+		fmt.Fprintf(response, "Successfully updated contact")
 	}
-	defer db.Close()
-	id := mux.Vars(request)["ID"]
-	var contact Contact
-	db.Where("ID = ?", id).Find(&contact)
-	fmt.Fprintf(response, "Successfully deleted contact")
 }
 
-//Function that handles API requests
-func poll(){
+// Function to delete a contact
+// D in CRUD
+func deleteContactByID(response http.ResponseWriter, request *http.Request) {
+	fmt.Println("Endpoint Hit: Delete Contact by ID")
+	id := mux.Vars(request)["ID"]
+	for index, contact := range Contacts {
+		if contact.ID == id {
+			fmt.Println("{}", &contact)
+			Contacts = append(Contacts[:index], Contacts[index+1:]...)
+		}
+		fmt.Fprintf(response, "Successfully deleted contact")
+	}
+}
+
+// Function that handles API requests
+func poll() {
 	//Create new mux router
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homePage)
@@ -137,28 +106,15 @@ func poll(){
 	router.HandleFunc("/contact/{ID}", readContactByID)
 	//Specify allowed contacts
 	c := cors.New(cors.Options{
-        AllowedOrigins: []string{"http://localhost:4200"},
-        AllowCredentials: true,
-    })
+		AllowedOrigins:   []string{"http://localhost:4200"},
+		AllowCredentials: true,
+	})
 
-    handler := c.Handler(router)
+	handler := c.Handler(router)
 	log.Fatal(http.ListenAndServe(":10000", handler))
 }
 
-//Function to set up initial database
-func initialMigration(){
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		fmt.Println(err.Error())
-		panic("Failed to connect database")
-	}
-	defer db.Close()
-
-	db.AutoMigrate(&Contact{})
-}
-
-//Main function
-func main(){
-	initialMigration()
+// Main function
+func main() {
 	poll()
 }
